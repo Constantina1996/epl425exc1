@@ -16,7 +16,7 @@ public class MultiThreadedTCPServer {
 
         private Socket client;
         private String clientbuffer;
-
+        private static int counter=1;
         public TCPWorker(Socket client) {
             this.client = client;
             this.clientbuffer = "";
@@ -35,7 +35,7 @@ public class MultiThreadedTCPServer {
 
                 this.clientbuffer = reader.readLine();
                 System.out.println("[" + new Date() + "] Received: " + this.clientbuffer);
-                output.writeBytes(this.clientbuffer.toUpperCase() + System.lineSeparator());
+                output.writeBytes("WELCOME <"+this.counter+++">" + System.lineSeparator());
             } catch (IOException e) {
                e.printStackTrace();
             }
