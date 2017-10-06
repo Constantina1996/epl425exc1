@@ -54,13 +54,13 @@ public class MultiTCPClient {
 
 	}
 
-	public static ExecutorService TCP_WORKER_SERVICE = Executors.newFixedThreadPool(10);
+	public static ExecutorService TCP_WORKER_SERVICE = Executors.newFixedThreadPool(300);
 
 	public static void main(String[] args) {
 		Socket socket = null;
 		int i;
 		try {
-			for (i = 0; i < 10; i++) {
+			for (i = 0; i < 300; i++) {
 				socket = new Socket("34.212.247.247", 80);
 				TCP_WORKER_SERVICE.submit(new TCPWorker(socket));
 			}
