@@ -29,16 +29,15 @@ public class MultiThreadedTCPServer {
 
 			try {
 				System.out.println("Client connected with: " + this.client.getInetAddress());
-				for (int i = 0; i < 300; i++) {
+				while(clientbuffer!="FINISHED") {
 					DataOutputStream output = new DataOutputStream(client.getOutputStream());
 					BufferedReader reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
 					this.clientbuffer = reader.readLine();
 					this.userId=clientbuffer.split(" ");
-						
 					output.writeBytes("WELCOME <" + this.userId[7] + ">" + System.lineSeparator());
 					System.out.println("[" + new Date() + "] Received: " + this.clientbuffer);
 				}
-				
+					client.close();
 				
 			} catch (IOException e) {
 				e.printStackTrace();
