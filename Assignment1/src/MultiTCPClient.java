@@ -57,9 +57,9 @@ public class MultiTCPClient {
 
 					// this.message=reader.readLine() + System.lineSeparator();
 					this.output.writeBytes(message);
-					this.startTimeReq = (double) System.currentTimeMillis() / 1000;
+					this.startTimeReq = (double) System.currentTimeMillis() / 1000.0;
 					this.response = server.readLine();
-					this.finishedTimeReq = (double) System.currentTimeMillis() / 1000;
+					this.finishedTimeReq = (double) System.currentTimeMillis() / 1000.0;
 					this.latencyTime += (double) (finishedTimeReq - startTimeReq);
 					System.out.println("[" + new Date() + "] Received : " + response);
 				}
@@ -97,14 +97,14 @@ public class MultiTCPClient {
 	public static void main(String[] args) {
 		Socket socket = null;
 		int i;
-		String cl = args[0];
-		String req = args[1];
-		int c = Integer.parseInt(cl);
-		int r = Integer.parseInt(req);
+		String ip=args[0];
+		int port=Integer.parseInt(args[1]);
+		int c = Integer.parseInt(args[2]);
+		int r = Integer.parseInt(args[3]);
 
 		try {
 			for (i = 1; i <= c; i++) {
-				socket = new Socket("34.211.21.218", 80);
+				socket = new Socket(ip, port);
 				TCP_WORKER_SERVICE.submit(new TCPWorker(socket, i, c, r));
 			}
 		} catch (IOException e) {
