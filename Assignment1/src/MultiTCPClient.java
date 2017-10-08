@@ -1,4 +1,3 @@
-package com.tcp.client;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -28,6 +27,10 @@ public class MultiTCPClient {
 		private String serverbuffer;
 		private String message;
 		private String response;
+		private static double latencyTime;
+		private Date date;
+		private double startTimeReq;
+		private double finishedTimeReq;
 		private int id;
 		private int c;
 		private int r;
@@ -38,6 +41,7 @@ public class MultiTCPClient {
 			this.id = id;
 			this.c = c;
 			this.r = r;
+			this.date = new Date();
 		}
 
 		@Override
@@ -50,17 +54,36 @@ public class MultiTCPClient {
 					this.reader = new BufferedReader(new InputStreamReader(System.in));
 					this.message = "Hello, IP client: " + this.socket.getInetAddress() + " Port: "
 							+ this.socket.getLocalPort() + " User: " + this.id + "\n";
+
 					// this.message=reader.readLine() + System.lineSeparator();
 					this.output.writeBytes(message);
+					this.startTimeReq = (double) System.currentTimeMillis() / 1000;
 					this.response = server.readLine();
-					System.out.println("[" + new Date() + "] Received: " + response);
+					this.finishedTimeReq = (double) System.currentTimeMillis() / 1000;
+					this.latencyTime += (double) (finishedTimeReq - startTimeReq);
+					System.out.println("[" + new Date() + "] Received : " + response);
 				}
-				this.message = "FINISHED";
-				this.output.writeBytes(message);
+				this.output = new DataOutputStream(this.socket.getOutputStream());
+				this.server = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+				this.reader = new BufferedReader(new InputStreamReader(System.in));
 				client++;
-				this.socket.close();
-				if (client == c)
-					System.exit(0);
+				if (client < c) {
+					this.message = "FINISHED" + "\n";
+					this.output.writeBytes(message);
+					this.socket.close();
+				} else {
+					this.message = "CLIENTS FINISHED" + "\n";
+					this.output.writeBytes(message);
+					System.out.println("Average latency time=" + latencyTime / (c * r) + " sec");
+					this.response = server.readLine();
+					while (true) {
+						if (response.equals("DONE")) {
+							this.socket.close();
+							System.exit(0);
+						}
+					}
+				}
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -81,7 +104,7 @@ public class MultiTCPClient {
 
 		try {
 			for (i = 1; i <= c; i++) {
-				socket = new Socket("34.208.28.211", 80);
+				socket = new Socket("34.211.21.218", 80);
 				TCP_WORKER_SERVICE.submit(new TCPWorker(socket, i, c, r));
 			}
 		} catch (IOException e) {
