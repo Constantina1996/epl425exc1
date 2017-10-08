@@ -5,15 +5,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MultiThreadedTCPServer {
-	public static final int range01=300;
-	public static final int range02=2000;
 
 	private static class TCPWorker implements Runnable {
 
@@ -29,7 +25,7 @@ public class MultiThreadedTCPServer {
 		public TCPWorker(Socket client) {
 			this.client = client;
 			this.clientbuffer = "";
-			this.seconds = 0.0;
+			this.seconds = 0;
 		}
 
 		@Override
@@ -41,31 +37,26 @@ public class MultiThreadedTCPServer {
 				BufferedReader reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
 				this.clientbuffer = reader.readLine();
 				while (!this.clientbuffer.equals("FINISHED") && !this.clientbuffer.equals("CLIENTS FINISHED")) {
-					this.startedTime =  (double) System.currentTimeMillis() / 1000.0;
+					this.startedTime =  (double)System.currentTimeMillis() / 1000;
 					this.userId = clientbuffer.split(" ");
-					Random randomSize = new Random(System.currentTimeMillis());
-	                int finalSize = (randomSize.nextInt(range02-range01+1)+range01)*1024;
-	                char[] payloadString = new char[finalSize];
-	                Arrays.fill(payloadString,'m');
-	                String payload = new String(payloadString);
-					output.writeBytes("WELCOME <" + this.userId[7] + ">" + payload + System.lineSeparator());
-					this.finishedTime =  (double) System.currentTimeMillis() / 1000.0;
-					this.seconds +=(double) (finishedTime - startedTime);
+					output.writeBytes("WELCOME <" + this.userId[7] + ">" + System.lineSeparator());
+					this.finishedTime =  (double)System.currentTimeMillis() / 1000;
+					this.seconds += (finishedTime - startedTime);
 					System.out.println("[" + new Date() + "] Received: " + this.clientbuffer);
 					output = new DataOutputStream(client.getOutputStream());
 					reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
 					this.clientbuffer = reader.readLine();
 					this.req++;
+					System.out.println("req  "+req+" sec  "+seconds);
+
 				}
 				if (this.clientbuffer.equals("FINISHED")){
 					client.close();
 				}else {
-					this.throughput = ((double)req / seconds);
+					this.throughput = ((double)req * seconds);
 					System.out.println("Average server throughput =" + throughput);
 					output = new DataOutputStream(client.getOutputStream());
 					output.writeBytes("DONE"+"\n");
-					this.req=0;
-					this.seconds=0.0;
 					client.close();
 				}
 
@@ -81,10 +72,9 @@ public class MultiThreadedTCPServer {
 
 	public static void main(String args[]) {
 		try {
-			int port =Integer.parseInt(args[0]);
-			int rep = Integer.parseInt(args[1]);
-			ServerSocket socket = new ServerSocket(port);
+			ServerSocket socket = new ServerSocket(80);
 			System.out.println("Server listening to: " + socket.getInetAddress() + ":" + socket.getLocalPort());
+
 			while (true) {
 				Socket client = socket.accept();
 
