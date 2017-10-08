@@ -1,4 +1,3 @@
-package com.tcp.server;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -16,12 +15,17 @@ public class MultiThreadedTCPServer {
 
 		private Socket client;
 		private String clientbuffer;
-		private String copyString;
-		private String [] userId;
+		private String[] userId;
+		private static int req = 0;
+		private int startedTime;
+		private int finishedTime;
+		private static int seconds;
+		private static int throughput;
 
 		public TCPWorker(Socket client) {
 			this.client = client;
 			this.clientbuffer = "";
+			this.seconds = 0;
 		}
 
 		@Override
@@ -29,16 +33,36 @@ public class MultiThreadedTCPServer {
 
 			try {
 				System.out.println("Client connected with: " + this.client.getInetAddress());
-				while(clientbuffer!="FINISHED") {
-					DataOutputStream output = new DataOutputStream(client.getOutputStream());
-					BufferedReader reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
-					this.clientbuffer = reader.readLine();
-					this.userId=clientbuffer.split(" ");
+				DataOutputStream output = new DataOutputStream(client.getOutputStream());
+				BufferedReader reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
+				this.clientbuffer = reader.readLine();
+				// while (!this.clientbuffer.equals("CLIENTS FINISHED")) {
+				while (!this.clientbuffer.equals("FINISHED") && !this.clientbuffer.equals("CLIENTS FINISHED")) {
+					this.startedTime = (int) System.currentTimeMillis() / 1000;
+					this.userId = clientbuffer.split(" ");
 					output.writeBytes("WELCOME <" + this.userId[7] + ">" + System.lineSeparator());
+					this.finishedTime = (int) System.currentTimeMillis() / 1000;
+					this.req++;
+					this.seconds += finishedTime - startedTime;
 					System.out.println("[" + new Date() + "] Received: " + this.clientbuffer);
+					output = new DataOutputStream(client.getOutputStream());
+					reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
+					this.clientbuffer = reader.readLine();
 				}
+				System.out.println("clientbuffer : " + clientbuffer);
+
+				if (this.clientbuffer.equals("FINISHED")){
+					 this.throughput += req / (seconds);
+					 this.seconds = 0;
+					 this.req = 0;
 					client.close();
-				
+				}else {
+					System.out.println("Average server throughput =" + throughput);
+					output = new DataOutputStream(client.getOutputStream());
+					output.writeBytes("DONE"+"\n");
+					client.close();
+				}
+
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
